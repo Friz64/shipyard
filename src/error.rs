@@ -228,14 +228,14 @@ pub enum RunWorkload {
 
 impl RunWorkload {
     #[cfg(feature = "std")]
-    pub fn custom_error(self) -> Option<Box<dyn Error + Send>> {
+    pub fn custom_error(self) -> Option<Box<dyn Error + Send + Sync>> {
         match self {
             Self::Run((_, Run::Custom(error))) => Some(error),
             _ => None,
         }
     }
     #[cfg(not(feature = "std"))]
-    pub fn custom_error(self) -> Option<Box<dyn core::any::Any + Send>> {
+    pub fn custom_error(self) -> Option<Box<dyn core::any::Any + Send + Sync>> {
         match self {
             Self::Run((_, Run::Custom(error))) => Some(error),
             _ => None,
@@ -274,9 +274,9 @@ impl Display for RunWorkload {
 pub enum Run {
     GetStorage(GetStorage),
     #[cfg(feature = "std")]
-    Custom(Box<dyn Error + Send>),
+    Custom(Box<dyn Error + Send + Sync>),
     #[cfg(not(feature = "std"))]
-    Custom(Box<dyn core::any::Any + Send>),
+    Custom(Box<dyn core::any::Any + Send + Sync>),
 }
 
 impl From<GetStorage> for Run {
@@ -287,11 +287,11 @@ impl From<GetStorage> for Run {
 
 impl Run {
     #[cfg(feature = "std")]
-    pub fn from_custom<E: Error + Send + 'static>(error: E) -> Self {
+    pub fn from_custom<E: Error + Send + Sync + 'static>(error: E) -> Self {
         Run::Custom(Box::new(error))
     }
     #[cfg(not(feature = "std"))]
-    pub fn from_custom<E: core::any::Any + Send>(error: E) -> Self {
+    pub fn from_custom<E: core::any::Any + Send + Sync>(error: E) -> Self {
         Run::Custom(Box::new(error))
     }
 }
